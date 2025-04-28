@@ -38,9 +38,4 @@ export class UserEntity {
     comment: 'Хеш пароля',
   })
   passwordHash: string;
-
-  @Column('varchar', {
-    comment: 'Соль пароля',
-  })
-  passwordSalt: string;
 }

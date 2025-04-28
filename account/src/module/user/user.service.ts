@@ -1,12 +1,16 @@
-import * as crypto from 'node:crypto';
 import * as argon from 'argon2';
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRepository } from './user.reposiroty';
 import { GetUsersFilterDto } from './dto/get-users-filter.dto';
 import { UserDto } from './dto/user.dto';
 import { CreateUserResponse } from './user.types';
+import { SingInDto } from './dto/sing-in.dto';
 
 @Injectable()
 export class UserService {
@@ -21,12 +25,9 @@ export class UserService {
       throw new ConflictException('User already exist');
     }
 
-    const salt = crypto.randomBytes(32);
-    const hash = await argon.hash(user.password, { salt });
-
+    const hash = await argon.hash(user.password);
     const result = await this.userRepository.createUser({
       passwordHash: hash,
-      passwordSalt: salt.toString('hex'),
       ...user,
     });
 
@@ -59,5 +60,15 @@ export class UserService {
 
   remove(id: string) {
     return this.userRepository.deleteUser(id);
+  }
+
+  async verification({ login, password }: SingInDto): Promise<boolean> {
+    const user = await this.userRepository.findByLogin(login);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return argon.verify(user.passwordHash, password);
   }
 }

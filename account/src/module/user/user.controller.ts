@@ -13,10 +13,16 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { GetUsersFilterDto } from './dto/get-users-filter.dto';
 import { UserDto } from './dto/user.dto';
+import { SingInDto } from './dto/sing-in.dto';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('/verification')
+  verification(@Query() dto: SingInDto): Promise<boolean> {
+    return this.userService.verification(dto);
+  }
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {

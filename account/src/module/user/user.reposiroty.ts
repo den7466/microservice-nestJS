@@ -80,4 +80,8 @@ export class UserRepository {
 
     return query;
   }
+
+  async findByLogin(login: string): Promise<UserEntity | undefined> {
+    return this.userRepository.findOneBy({ login });
+  }
 }
