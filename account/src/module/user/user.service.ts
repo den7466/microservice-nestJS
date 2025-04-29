@@ -1,6 +1,7 @@
 import * as argon from 'argon2';
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,10 +12,15 @@ import { GetUsersFilterDto } from './dto/get-users-filter.dto';
 import { UserDto } from './dto/user.dto';
 import { CreateUserResponse } from './user.types';
 import { SingInDto } from './dto/sing-in.dto';
+import { REDIS_TOKEN } from '../../config/redis/redis.constant';
+import Redis from 'ioredis';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    @Inject(REDIS_TOKEN) private readonly redis: Redis,
+    private readonly userRepository: UserRepository,
+  ) {}
 
   async create(user: CreateUserDto): Promise<CreateUserResponse> {
     const userExist = await this.userRepository.checkExistUser({
@@ -58,7 +64,9 @@ export class UserService {
     return this.userRepository.updateUser({ userId: id, ...updateUserDto });
   }
 
-  remove(id: string) {
+  async remove(id: string) {
+    const user = await this.userRepository.findById(id);
+    await this.redis.del(user.login);
     return this.userRepository.deleteUser(id);
   }
 

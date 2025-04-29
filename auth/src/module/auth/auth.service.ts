@@ -1,4 +1,5 @@
 import {
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -8,10 +9,13 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SingInDto } from './dto/sing-in.dto';
 import { JwtDto, RefreshJwtDto } from './dto/jwt.dto';
+import { REDIS_TOKEN } from '../../config/redis/redis.constant';
+import Redis from 'ioredis';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(REDIS_TOKEN) private readonly redis: Redis,
     private readonly accountServiceInternal: InternalAccountService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
@@ -25,10 +29,18 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const users = await this.accountServiceInternal.GetUsersByFilter({
-      login: params.login,
-    });
-    const payload = { login: params.login, userId: users.items[0].userId };
+    let userId = await this.redis.get(params.login);
+
+    if (!userId) {
+      const users = await this.accountServiceInternal.GetUsersByFilter({
+        login: params.login,
+      });
+      userId = users.items[0].userId;
+
+      this.redis.set(params.login, userId);
+    }
+
+    const payload = { login: params.login, userId };
     const access = this.jwtService.sign(payload, {
       secret: this.config.get('JWT_ACCESS_SECRET'),
       algorithm: this.config.get('JWT_ALG'),
@@ -55,6 +67,7 @@ export class AuthService {
         algorithms: [this.config.get('JWT_ALG')],
       });
     } catch (error: unknown) {
+      console.log(error);
       throw new UnauthorizedException();
     }
 
