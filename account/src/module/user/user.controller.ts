@@ -29,6 +29,11 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
+  @Post('/balance')
+  balance(@Body() body): Promise<void> {
+    return this.userService.changeBalance(body);
+  }
+
   @Get()
   findAll(
     @Query() getUserFilterDto: GetUsersFilterDto,

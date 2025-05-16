@@ -1,8 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({
   name: 'user',
 })
+@Index(['login', 'phone'])
 export class UserEntity {
   @PrimaryGeneratedColumn('uuid', {
     comment: 'Идентификатор пользователя',
@@ -17,6 +18,7 @@ export class UserEntity {
   })
   phone: string;
 
+  @Index()
   @Column('varchar', {
     comment: 'Логин пользователя',
     nullable: false,
@@ -38,4 +40,18 @@ export class UserEntity {
     comment: 'Хеш пароля',
   })
   passwordHash: string;
+
+  @Column('varchar', {
+    comment: 'Баланс пользователя',
+    nullable: false,
+    default: '0',
+  })
+  balance: string;
+
+  @Column('boolean', {
+    comment: 'Был ли удален аккаунт',
+    nullable: true,
+    default: false,
+  })
+  isDeleted: boolean;
 }

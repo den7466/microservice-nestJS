@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './module/app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { AppModule } from './module/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,9 +13,7 @@ async function bootstrap() {
     .setTitle(`${config.get('SERVICE_NAME')} microservice`)
     .setDescription('API Documentation')
     .addServer(
-      `http://${config.get('HTTP_HOST')}:${config.get('HTTP_PORT')}${config.get(
-        'HTTP_PREFIX',
-      )}`,
+      `http://${config.get('HTTP_HOST')}:${config.get('HTTP_PORT')}${config.get('HTTP_PREFIX')}`,
     )
     .build();
 
