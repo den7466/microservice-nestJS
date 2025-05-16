@@ -1,7 +1,11 @@
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { DeepPartial, Repository, SelectQueryBuilder } from 'typeorm';
-import { CheckExistUserParams, FindUserParams } from './user.types';
+import {
+  ChangeBalanceParams,
+  CheckExistUserParams,
+  FindUserParams,
+} from './user.types';
 
 export class UserRepository {
   constructor(
@@ -28,11 +32,15 @@ export class UserRepository {
   }
 
   async updateUser(params: DeepPartial<UserEntity>): Promise<void> {
-    await this.userRepository.update({ userId: params.userId }, params);
+    const { balance, ...updateUser } = params;
+    await this.userRepository.update(
+      { userId: params.userId },
+      { balance, ...updateUser },
+    );
   }
 
   async deleteUser(id: string): Promise<void> {
-    await this.userRepository.delete({ userId: id });
+    await this.userRepository.update({ userId: id }, { isDeleted: true });
   }
 
   async checkExistUser(
@@ -43,6 +51,7 @@ export class UserRepository {
 
     query.where('user.login = :login', { login: params.login });
     query.orWhere('user.phone = :phone', { phone: params.phone });
+    query.andWhere('user.isDeleted = :isDeleted', { isDeleted: false });
 
     const result = await query.getOne();
     return result ? true : false;
@@ -82,6 +91,11 @@ export class UserRepository {
   }
 
   async findByLogin(login: string): Promise<UserEntity | undefined> {
-    return this.userRepository.findOneBy({ login });
+    return this.userRepository.findOneBy({ login, isDeleted: false });
+  }
+
+  async changeBalance(params: ChangeBalanceParams): Promise<void> {
+    const { userId, balance } = params;
+    await this.userRepository.update({ userId }, { balance });
   }
 }
