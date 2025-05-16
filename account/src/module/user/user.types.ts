@@ -17,3 +17,14 @@ export type CreateUserResponse = {
   phone: string;
   userId: string;
 };
+
+export enum TransactionType {
+  WITHDRAWL = 'WITHDRAWL',
+  DEPOSIT = 'DEPOSIT',
+  TRANSFER = 'TRANSFER',
+}
+
+export type ChangeBalanceParams = {
+  userId: string;
+  balance: string;
+};

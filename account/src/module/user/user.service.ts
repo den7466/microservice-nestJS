@@ -10,10 +10,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRepository } from './user.reposiroty';
 import { GetUsersFilterDto } from './dto/get-users-filter.dto';
 import { UserDto } from './dto/user.dto';
-import { CreateUserResponse } from './user.types';
+import { CreateUserResponse, TransactionType } from './user.types';
 import { SingInDto } from './dto/sing-in.dto';
 import { REDIS_TOKEN } from '../../config/redis/redis.constant';
 import Redis from 'ioredis';
+import { ChangeBalanceDto } from './dto/change-balance.dto';
 
 @Injectable()
 export class UserService {
@@ -78,5 +79,28 @@ export class UserService {
     }
 
     return argon.verify(user.passwordHash, password);
+  }
+
+  async changeBalance(params: ChangeBalanceDto): Promise<void> {
+    const { userId, amount, transactionType } = params;
+    const { balance } = await this.userRepository.findById(userId);
+    let newBalance;
+
+    if (transactionType == TransactionType.DEPOSIT) {
+      newBalance = Number(balance) + Number(amount);
+    }
+
+    if (transactionType == TransactionType.WITHDRAWL) {
+      newBalance = Number(balance) - Number(amount);
+    }
+
+    if (newBalance < 0) {
+      throw new ConflictException('Insufficient funds');
+    }
+
+    await this.userRepository.changeBalance({
+      userId,
+      balance: newBalance.toString(),
+    });
   }
 }
